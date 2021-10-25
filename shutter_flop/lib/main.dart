@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import './screens/product_detail_screen.dart';
+import './screens/products_overview_screen.dart';
+import './providers/products_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,12 +15,22 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'My Shop',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return ChangeNotifierProvider(
+      create: (ctx) => Products(),
+      child: MaterialApp(
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.purple,
+          ).copyWith(
+            secondary: Colors.deepOrange,
+          ),
+          fontFamily: 'Lato',
+        ),
+        home: ProductsOverviewScreen(),
+        routes: {
+          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+        },
       ),
-      home: const MyHomePage(title: 'My Shop'),
     );
   }
 }
@@ -32,13 +47,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: const Center(
-          child: Text(
-              "Comming soon!")), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return ProductsOverviewScreen();
   }
 }
