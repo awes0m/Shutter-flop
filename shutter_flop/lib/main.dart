@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shutter_flop/screens/carts_screen.dart';
+import 'package:shutter_flop/screens/orders_scree.dart';
 
 import './screens/product_detail_screen.dart';
 import './screens/products_overview_screen.dart';
 import './providers/products_provider.dart';
+import 'providers/cart.dart';
+import 'providers/orders.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,8 +19,18 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (ctx) => Products(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (ctx) => Products(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => Cart(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => Orders(),
+        ),
+      ],
       child: MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSwatch(
@@ -26,9 +40,11 @@ class MyApp extends StatelessWidget {
           ),
           fontFamily: 'Lato',
         ),
-        home: ProductsOverviewScreen(),
+        home: const ProductsOverviewScreen(),
         routes: {
-          ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+          ProductDetailScreen.routeName: (ctx) => const ProductDetailScreen(),
+          CartScreen.routeName: (ctx) => const CartScreen(),
+          OrdersScreen.routeName: (ctx) => const OrdersScreen(),
         },
       ),
     );
@@ -47,6 +63,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return ProductsOverviewScreen();
+    return const ProductsOverviewScreen();
   }
 }
