@@ -23,6 +23,7 @@ class ProductDetailScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // ignore: avoid_unnecessary_containers
             Container(
               child: Image.network(
                 loadedProduct.imageUrl,

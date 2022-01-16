@@ -17,6 +17,7 @@ class OrderItem with ChangeNotifier {
 }
 
 class Orders with ChangeNotifier {
+  // ignore: prefer_final_fields
   List<OrderItem> _orders = [];
   List<OrderItem> get orders {
     return [..._orders];
