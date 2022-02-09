@@ -34,21 +34,7 @@ class CartScreen extends StatelessWidget {
                     label: Text('\$${cart.totalAmount}'),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  TextButton(
-                    child: Text(
-                      'ORDER NOW',
-                      style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                        cart.items.values.toList(),
-                        cart.totalAmount,
-                      );
-                      cart.clear();
-                    },
-                  ),
+                  OrderButton(cart: cart),
                 ],
               ),
             ),
@@ -70,6 +56,68 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key? key,
+    required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false; // loading state
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      child: _isLoading
+          ? const CircularProgressIndicator()
+          : Text(
+              'ORDER NOW',
+              style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold),
+            ),
+      //disabled button if order value is 0 or if loading is true
+      onPressed: (widget.cart.totalAmount <= 0 || _isLoading)
+          ? null
+          : () async {
+              try {
+                setState(() {
+                  _isLoading = true;
+                });
+                await Provider.of<Orders>(context, listen: false).addOrder(
+                  widget.cart.items.values.toList(),
+                  widget.cart.totalAmount,
+                );
+                setState(() {
+                  _isLoading = false;
+                });
+                widget.cart.clear();
+              } catch (error) {
+                await showDialog<void>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                          title: const Text('An error occured'),
+                          content: Text(error.toString()),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Okay'),
+                              onPressed: () {
+                                Navigator.of(ctx).pop();
+                              },
+                            )
+                          ],
+                        ));
+              }
+            },
     );
   }
 }

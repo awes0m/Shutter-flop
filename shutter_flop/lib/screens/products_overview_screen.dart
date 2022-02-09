@@ -13,6 +13,7 @@ enum FilterOptions {
 }
 
 class ProductsOverviewScreen extends StatefulWidget {
+  static String routename = '/products-overview';
   const ProductsOverviewScreen({Key? key}) : super(key: key);
 
   @override
@@ -26,7 +27,6 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     if (_isInit) {
       _isLoading = true;
       Provider.of<Products>(context).fetchAndSetProducts().then((_) {
@@ -88,7 +88,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       ),
       drawer: const AppDrawer(),
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : ProductsGrid(_showOnlyFavourites),

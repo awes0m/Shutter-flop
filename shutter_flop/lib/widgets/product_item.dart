@@ -58,7 +58,7 @@ class ProductItem extends StatelessWidget {
             ),
           ),
           title: Text(
-            "$product.price",
+            "\$ ${product.price} ",
             textScaleFactor: 1.3,
             textAlign: TextAlign.center,
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../models/widgets/http_exceptions.dart';
+import '../utils/constant.dart';
 import './product.dart';
 
 class Products with ChangeNotifier {
@@ -14,30 +16,6 @@ class Products with ChangeNotifier {
     //   price: 29.99,
     //   imageUrl:
     //       'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-    // ),
-    // Product(
-    //   id: 'p2',
-    //   title: 'Trousers',
-    //   description: 'A nice pair of trousers.',
-    //   price: 59.99,
-    //   imageUrl:
-    //       'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-    // ),
-    // Product(
-    //   id: 'p3',
-    //   title: 'Yellow Scarf',
-    //   description: 'Warm and cozy - exactly what you need for the winter.',
-    //   price: 19.99,
-    //   imageUrl:
-    //       'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    // ),
-    // Product(
-    //   id: 'p4',
-    //   title: 'A Pan',
-    //   description: 'Prepare any meal you want.',
-    //   price: 49.99,
-    //   imageUrl:
-    //       'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     // ),
   ];
 
@@ -57,12 +35,11 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    final url = Uri.https(
-        'shutter-flop-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products.json');
+    //fetches data from firebase
+    final url = Uri.https(firebaseUrl, '/products.json');
     try {
       final response = await http.get(url);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      final extractedData = json.decode(response.body) as Map<String, dynamic>?;
       final List<Product> loadedProducts = [];
       if (extractedData == null) {
         return;
@@ -85,9 +62,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    final url = Uri.https(
-        'shutter-flop-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/products.json');
+    //add product to firebase
+    final url = Uri.https(firebaseUrl, '/products.json');
     try {
       final response = await http.post(
         url,
@@ -112,23 +88,52 @@ class Products with ChangeNotifier {
       // _items.insert(0, newProduct);// to add product at start of list
       notifyListeners();
     } catch (error) {
-      print(error);
+      // print(error);
       rethrow;
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
+    // update product
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
+
     if (prodIndex >= 0) {
+      final url = Uri.https(
+          'shutter-flop-648fb-default-rtdb.asia-southeast1.firebasedatabase.app',
+          '/products/$id.json');
+      try {
+        await http.patch(
+          url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+            'price': newProduct.price,
+          }),
+        );
+      } catch (error) {
+        rethrow;
+      }
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {
-      print('...');
+      //print('...');
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((product) => product.id == id);
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.https(firebaseUrl, '/products/$id.json');
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _items[existingProductIndex];
+    _items.removeAt(existingProductIndex);
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct); // to undo delete
+      notifyListeners();
+      throw HttpException('Failed to delete product');
+    }
+    existingProduct = null;
+
     notifyListeners();
   }
 }
