@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/widgets/http_exceptions.dart';
+import '../models/http_exceptions.dart';
 import '../utils/constant.dart';
 import 'cart.dart';
 
@@ -22,7 +22,16 @@ class OrderItem with ChangeNotifier {
 }
 
 class Orders with ChangeNotifier {
+  final String? authToken;
+  final String? userId;
   List<OrderItem> _orders = [];
+
+  Orders(
+    this.authToken,
+    this.userId,
+    this._orders,
+  );
+
   List<OrderItem> get orders {
     return [..._orders];
   }
@@ -66,7 +75,9 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchAndSetOrders() async {
     try {
-      final url = Uri.https(firebaseUrl, '/order.json');
+      final url = Uri.https(firebaseUrl, '/order.json', {
+        'auth': authToken,
+      });
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>?;
       final List<OrderItem> loadedOrders = [];

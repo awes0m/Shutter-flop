@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../models/widgets/http_exceptions.dart';
+import '../models/http_exceptions.dart';
 import '../utils/constant.dart';
 import './product.dart';
 
@@ -10,7 +10,7 @@ class Products with ChangeNotifier {
   // ignore: prefer_final_fields
   List<Product> _items = [
     // Product(
-    //   id: 'p1',
+    //   id: 'p1 ',
     //   title: 'Red Shirt',
     //   description: 'A red shirt - it is pretty red!',
     //   price: 29.99,
@@ -18,6 +18,10 @@ class Products with ChangeNotifier {
     //       'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
     // ),
   ];
+
+  final String? authToken;
+  final String? userId;
+  Products(this.authToken, this.userId, this._items);
 
   List<Product> get items {
     // if (_showFavouritesOnly) {
@@ -34,28 +38,48 @@ class Products with ChangeNotifier {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
     //fetches data from firebase
-    final url = Uri.https(firebaseUrl, '/products.json');
+
+    var params = {
+      'orderBy': '"creatorId"',
+      'equalTo': '"$userId"',
+      'print': 'pretty',
+    };
+
+    String paramString =
+        params.entries.map((p) => '${p.key}=${p.value}').join('&');
+    final filterString = filterByUser ? paramString : '';
+    final url =
+        Uri.https(firebaseUrl, "/products.json?auth=$authToken&$filterString");
     try {
       final response = await http.get(url);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>?;
-      final List<Product> loadedProducts = [];
-      if (extractedData == null) {
-        return;
-      }
-      extractedData.forEach((prodId, prodData) {
-        loadedProducts.add(Product(
-          id: prodId,
-          title: prodData['title'],
-          description: prodData['description'],
-          price: prodData['price'],
-          isFavourite: prodData['isFavourite'],
-          imageUrl: prodData['imageUrl'],
-        ));
-      });
-      _items = loadedProducts;
-      notifyListeners();
+      //print('data= ${response.body}');
+
+      Map<String, dynamic>? extractedData =
+          jsonDecode(response.body.toString());
+      print(extractedData);
+      // final List<Product> loadedProducts = [];
+      // if (extractedData == null) {
+      //   return;
+      // }
+      // final favouriteUrl = Uri.https(
+      //     firebaseUrl, '/userFavourites/$userId.json', {"auth": authToken});
+      // final favouriteResponse = await http.get(favouriteUrl);
+      // final favouriteData = json.decode(favouriteResponse.body);
+      // extractedData.forEach((prodId, prodData) {
+      //   loadedProducts.add(Product(
+      //     id: prodId,
+      //     title: prodData['title'],
+      //     description: prodData['description'],
+      //     price: prodData['price'],
+      //     isFavourite:
+      //         favouriteData == null ? false : favouriteData[prodId] ?? false,
+      //     imageUrl: prodData['imageUrl'],
+      //   ));
+      // });
+      // _items = loadedProducts;
+      // notifyListeners();
     } catch (error) {
       rethrow;
     }
@@ -63,7 +87,15 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     //add product to firebase
-    final url = Uri.https(firebaseUrl, '/products.json');
+    var params = {
+      "auth": authToken,
+      "orderBy": userId,
+    };
+    String paramString =
+        params.entries.map((p) => '${p.key}=${p.value}').join('&');
+    final url = Uri.parse(
+      firebaseUrl + '/products.json' + paramString,
+    );
     try {
       final response = await http.post(
         url,
@@ -73,7 +105,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'price': product.price,
-            'isFavourite': product.isFavourite
+            'creatorId': userId,
           },
         ),
       );
@@ -88,7 +120,7 @@ class Products with ChangeNotifier {
       // _items.insert(0, newProduct);// to add product at start of list
       notifyListeners();
     } catch (error) {
-      // print(error);
+      //print(error);
       rethrow;
     }
   }
@@ -98,9 +130,8 @@ class Products with ChangeNotifier {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
 
     if (prodIndex >= 0) {
-      final url = Uri.https(
-          'shutter-flop-648fb-default-rtdb.asia-southeast1.firebasedatabase.app',
-          '/products/$id.json');
+      final url =
+          Uri.https(firebaseUrl, '/products/$id.json', {"auth": authToken});
       try {
         await http.patch(
           url,
@@ -122,7 +153,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String id) async {
-    final url = Uri.https(firebaseUrl, '/products/$id.json');
+    final url =
+        Uri.https(firebaseUrl, '/products/$id.json', {"auth": authToken});
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];
     _items.removeAt(existingProductIndex);
