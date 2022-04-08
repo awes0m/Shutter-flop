@@ -1,4 +1,5 @@
 //dependencies
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shutter_flop/providers/auth.dart';
@@ -15,7 +16,9 @@ import 'screens/carts_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/user_products_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
             auth.userId!,
             previousProducts == null ? [] : previousProducts.items,
           ),
-          create: (context) => Products(null,null, []),
+          create: (context) => Products(null, null, []),
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
@@ -47,7 +50,7 @@ class MyApp extends StatelessWidget {
             auth.userId!,
             previousOrders == null ? [] : previousOrders.orders,
           ),
-          create: (context) => Orders(null,null, []),
+          create: (context) => Orders(null, null, []),
         ),
       ],
       child: Consumer<Auth>(

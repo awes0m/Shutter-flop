@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "280599206718",
+    "firebase_url": "https://shutter-fire-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "shutter-fire",
+    "storage_bucket": "shutter-fire.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280599206718:android:1d6c30c67686138a1faa6f",
+        "android_client_info": {
+          "package_name": "com.example.shutter_flop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "280599206718-tjirvsrnanehfssf8lj048u94kau7ghb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhmxXbnGrBQRi5NnklieQV14ByDex-mtU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "280599206718-tjirvsrnanehfssf8lj048u94kau7ghb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

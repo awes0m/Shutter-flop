@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -39,54 +40,103 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
-    //fetches data from firebase
+    //fetches data from firebase using Rest API
+    // var params = {
+    //   'orderBy': '"creatorId"',
+    //   'equalTo': '"$userId"',
+    //   'print': 'pretty',
+    // };
 
-    var params = {
-      'orderBy': '"creatorId"',
-      'equalTo': '"$userId"',
-      'print': 'pretty',
-    };
+    // String paramString =
+    //     params.entries.map((p) => '${p.key}=${p.value}').join('&');
+    // final filterString = filterByUser ? paramString : '';
+    // final url =
+    //     Uri.https(firebaseUrl, "/products.json?auth=$authToken&$filterString");
+    // try {
+    //   final response = await http.get(url);
+    //   //print('data= ${response.body}');
 
-    String paramString =
-        params.entries.map((p) => '${p.key}=${p.value}').join('&');
-    final filterString = filterByUser ? paramString : '';
-    final url =
-        Uri.https(firebaseUrl, "/products.json?auth=$authToken&$filterString");
+    //   Map<String, dynamic>? extractedData =
+    //       jsonDecode(response.body.toString());
+    //   print(extractedData);
+    //   final List<Product> loadedProducts = [];
+    //   if (extractedData == null) {
+    //     return;
+    //   }
+    //   final favouriteUrl = Uri.https(
+    //       firebaseUrl, '/userFavourites/$userId.json', {"auth": authToken});
+    //   final favouriteResponse = await http.get(favouriteUrl);
+    //   final favouriteData = json.decode(favouriteResponse.body);
+    //   extractedData.forEach((prodId, prodData) {
+    //     loadedProducts.add(Product(
+    //       id: prodId,
+    //       title: prodData['title'],
+    //       description: prodData['description'],
+    //       price: prodData['price'],
+    //       isFavourite:
+    //           favouriteData == null ? false : favouriteData[prodId] ?? false,
+    //       imageUrl: prodData['imageUrl'],
+    //     ));
+    //   });
+    //   _items = loadedProducts;
+    //   notifyListeners();
+
+    // } catch (error) {
+    //   rethrow;
+    // }
+
+//# fetches data using Firebase sdk
     try {
-      final response = await http.get(url);
-      //print('data= ${response.body}');
+      final favouriteResponse =
+          await FirebaseDatabase.instance //Adding Favourite
+              .ref()
+              .child('userFavourites')
+              .child("$userId")
+              .get();
 
-      Map<String, dynamic>? extractedData =
-          jsonDecode(response.body.toString());
-      print(extractedData);
-      // final List<Product> loadedProducts = [];
-      // if (extractedData == null) {
-      //   return;
-      // }
-      // final favouriteUrl = Uri.https(
-      //     firebaseUrl, '/userFavourites/$userId.json', {"auth": authToken});
-      // final favouriteResponse = await http.get(favouriteUrl);
-      // final favouriteData = json.decode(favouriteResponse.body);
-      // extractedData.forEach((prodId, prodData) {
-      //   loadedProducts.add(Product(
-      //     id: prodId,
-      //     title: prodData['title'],
-      //     description: prodData['description'],
-      //     price: prodData['price'],
-      //     isFavourite:
-      //         favouriteData == null ? false : favouriteData[prodId] ?? false,
-      //     imageUrl: prodData['imageUrl'],
-      //   ));
-      // });
-      // _items = loadedProducts;
-      // notifyListeners();
+      final favouriteData = json.decode(favouriteResponse.value.toString());
+
+      addToFirebase(data) {
+        final dynamic extractedData = data.value as dynamic;
+        // print(extractedData);
+        final List<Product> loadedProducts = [];
+        if (extractedData == null) {
+          return;
+        }
+        extractedData.forEach((prodId, prodData) {
+          loadedProducts.add(Product(
+            id: prodId,
+            title: prodData['title'],
+            description: prodData['description'],
+            price: prodData['price'],
+            isFavourite:
+                favouriteData == null ? false : favouriteData[prodId] ?? false,
+            imageUrl: prodData['imageUrl'],
+          ));
+        });
+        _items = loadedProducts;
+        notifyListeners();
+      }
+
+      final rawResponse = filterByUser
+          ? FirebaseDatabase.instance
+              .ref()
+              .child('products')
+              .child('creatorId')
+              .equalTo('$userId')
+          : FirebaseDatabase.instance.ref().child('products');
+
+      rawResponse.onValue.listen((DatabaseEvent event) {
+        final data = event.snapshot.value;
+        addToFirebase(data);
+      });
     } catch (error) {
       rethrow;
     }
   }
 
   Future<void> addProduct(Product product) async {
-    //add product to firebase
+    // add product to firebase using Apis
     var params = {
       "auth": authToken,
       "orderBy": userId,
